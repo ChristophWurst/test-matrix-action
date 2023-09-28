@@ -2,71 +2,36 @@ name: Test
 on: pull_request
 
 jobs:
-  nextcloud-master-only:
+  single-dimension:
     runs-on: ubuntu-latest
-    name: Defaults
+    name: Single dimension
     steps:
       - uses: actions/checkout@v3
       - uses: ./
         id: matrix
         with:
-          min-php-version: '8.0'
-          max-php-version: '8.1'
+          parameters: '{"a": [1, 2] }'
       - run: echo ${{ toJSON(steps.matrix.outputs.matrix) }}
-      - run: if ${{ fromJSON(toJSON(steps.matrix.outputs.matrix)) != '[{"nextcloudVersion":"master","phpVersion":"8.0"},{"nextcloudVersion":"master","phpVersion":"8.1"}]' }}; then exit 1; fi
-  full-numeric-nextcloud-range:
+      - run: if ${{ fromJSON(toJSON(steps.matrix.outputs.matrix)) != '[{"a":1},{"a":2}]' }}; then exit 1; fi
+  two-dimensions:
     runs-on: ubuntu-latest
-    name: Numeric Nextcloud range
+    name: Two dimensions
     steps:
       - uses: actions/checkout@v3
       - uses: ./
         id: matrix
         with:
-          min-nextcloud-version: '25'
-          max-nextcloud-version: '27'
-          min-php-version: '7.4'
-          max-php-version: '8.2'
+          parameters: '{"a": [1, 2], "b": ["hi", "ho"] }'
       - run: echo ${{ toJSON(steps.matrix.outputs.matrix) }}
-      - run: if ${{ fromJSON(toJSON(steps.matrix.outputs.matrix)) != '[{"nextcloudVersion":25,"phpVersion":"7.4"},{"nextcloudVersion":25,"phpVersion":"8.0"},{"nextcloudVersion":25,"phpVersion":"8.1"},{"nextcloudVersion":26,"phpVersion":"8.0"},{"nextcloudVersion":26,"phpVersion":"8.1"},{"nextcloudVersion":26,"phpVersion":"8.2"},{"nextcloudVersion":27,"phpVersion":"8.0"},{"nextcloudVersion":27,"phpVersion":"8.1"},{"nextcloudVersion":27,"phpVersion":"8.2"}]' }}; then exit 1; fi
-  setup-nextcloud-matrix:
-    runs-on: ubuntu-latest
-    name: Matrix for setup-nextcloud
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./
-        id: matrix
-        with:
-          min-nextcloud-version: '26'
-          max-nextcloud-version: '27'
-          min-php-version: '8.1'
-          max-php-version: '8.2'
-      - run: echo ${{ toJSON(steps.matrix.outputs.matrix) }}
-  integration-with-setup-nextcloud:
-    needs: setup-nextcloud-matrix
-    runs-on: ubuntu-latest
-    name: Integation with setup-nextcloud NC=${{ matrix.nextcloudVersion }} PHP=${{ matrix.phpVersion }}
-    strategy:
-      matrix:
-        include: ${{ fromJSON(needs.setup-nextcloud-matrix.outputs.matrix) }}
-    steps:
-      - name: Set up Nextcloud env
-        uses: ChristophWurst/setup-nextcloud@v0.3.1
-        with:
-          nextcloud-version: stable25
-          php-version: '8.2'
-          node-version: 'false'
+      - run: if ${{ fromJSON(toJSON(steps.matrix.outputs.matrix)) != '[{"a":1,"b":"hi"},{"a":1,"b":"ho"},{"a":2,"b":"hi"}]' }}; then exit 1; fi
 
   summary:
     name: Test summary
     runs-on: ubuntu-latest
     needs:
-      - nextcloud-master-only
-      - full-numeric-nextcloud-range
-      - integration-with-setup-nextcloud
+      - single-dimension
+      - two-dimensions
     if: always()
     steps:
-      - run: if ${{ needs.nextcloud-master-only.result != 'success' }}; then exit 1; fi
-      - run: if ${{ needs.full-numeric-nextcloud-range.result != 'success' }}; then exit 1; fi
-      - run: if ${{ needs.integration-with-setup-nextcloud.result != 'success' }}; then exit 1; fi
+      - run: if ${{ needs.single-dimension.result != 'success' }}; then exit 1; fi
+      - run: if ${{ needs.two-dimensions.result != 'success' }}; then exit 1; fi

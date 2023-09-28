@@ -1,23 +1,12 @@
-name: 'Generate Nextcloud test matrix'
-description: 'Generate a test matrix with Nextcloud and PHP versions based on version ranges'
+name: 'Generate Github action test matrix'
+description: 'Generate a (minimal) test matrix from continuous parameters'
 branding:
   icon: 'cloud'
   color: 'blue'
 inputs:
-  min-php-version:
-    description: 'Minimum PHP version to test'
+  parameters:
+    description: 'Nested array with all possible parameters'
     required: true
-  max-php-version:
-    description: 'Maximum PHP version to test'
-    required: true
-  min-nextcloud-version:
-    description: 'Minimum Nextcloud version to test'
-    required: false
-    default: 'master'
-  max-nextcloud-version:
-    description: 'Maximum Nextcloud version to test'
-    required: false
-    default: 'master'
 runs:
   using: 'node16'
   main: 'index.js'
